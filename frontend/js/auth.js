@@ -104,7 +104,7 @@ class AuthManager {
                 
                 // 1 saniye sonra ana sayfaya yönlendir
                 setTimeout(() => {
-                    window.location.href = '/profile.html'; // veya ana sayfa URL'niz
+                    window.location.href = '/index.html'; // veya ana sayfa URL'niz
                 }, 1000);
             } else {
                 throw new Error(result.message || 'Giriş işlemi başarısız');
@@ -242,7 +242,19 @@ class AuthManager {
             'Authorization': `Bearer ${token}`
         };
     }
-}
+
+    static logout() {
+        try {
+            // Remove token from storage
+            localStorage.removeItem("jwtToken");
+            // Redirect to login page or home
+            window.location.href = "/login.html";
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
+    }
+    
+};
 
 // AuthManager'ı başlat
 document.addEventListener('DOMContentLoaded', () => {

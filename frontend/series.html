@@ -70,8 +70,8 @@
         }
 
         .series-overview {
-            font-size: 1.2rem;
-            line-height: 1.6;
+            font-size: 1.05rem;
+            line-height: 1.2;
             margin-bottom: 2rem;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
@@ -324,7 +324,7 @@
 
         @media (max-width: 768px) {
             .hero-section {
-                height: 50vh;
+                height: 70vh;
                 padding: 2rem;
             }
 
@@ -353,7 +353,6 @@
         <div class="series-meta">
           <span class="match-score" id="matchScore"></span>
           <span id="firstAirDate"></span>
-          <span class="rating" id="rating">HD</span>
         </div>
         <p class="series-overview" id="seriesOverview"></p>
         <div class="action-buttons">
@@ -433,7 +432,7 @@
         const imgBase = "https://image.tmdb.org/t/p/original";
         document.getElementById("heroBackdrop").src = series.backdropPath ? imgBase + series.backdropPath : "https://via.placeholder.com/1920x1080";
 
-        document.getElementById("matchScore").textContent = series.voteAverage ? `${Math.round(series.voteAverage * 10)}% Match` : "";
+        document.getElementById("matchScore").textContent = series.voteAverage ? series.voteAverage : "";
         document.getElementById("firstAirDate").textContent = new Date(series.firstAirDate).getFullYear();
       }
 
