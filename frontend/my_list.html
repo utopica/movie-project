@@ -73,6 +73,23 @@
         gap: 1rem;
       }
 
+      .user-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .user-controls a {
+        color: white;
+        text-decoration: none;
+        font-size: 1.2rem;
+        transition: color 0.3s ease;
+      }
+
+      .user-controls a:hover {
+        color: #e50914;
+      }
+
       .main-content {
         margin-top: 80px;
         padding: 2rem 4%;
@@ -306,6 +323,26 @@
         color: #b3b3b3;
       }
 
+      .error-message {
+        text-align: center;
+        padding: 2rem;
+        color: #e50914;
+        background: rgba(229, 9, 20, 0.1);
+        border-radius: 8px;
+        margin-bottom: 2rem;
+      }
+
+      .logout-btn {
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: 0.3s ease;
+      }
+
       @media (max-width: 768px) {
         .main-content {
           padding: 2rem 2%;
@@ -328,6 +365,10 @@
         .page-title {
           font-size: 2rem;
         }
+
+        .nav-links {
+          display: none;
+        }
       }
     </style>
   </head>
@@ -340,10 +381,20 @@
         </a>
         <nav class="nav-links">
           <a href="/">Home</a>
-          <a href="/movies">Movies</a>
-          <a href="/series">TV Shows</a>
-          <a href="/genres" class="active">Browse</a>
+          <a href="/movies_list.html">Movies</a>
+          <a href="/series_list">TV Shows</a>
+          <a href="/genres">Genres</a>
+          <a href="/my_list" class="active">My List</a>
         </nav>
+
+        <div class="user-controls">
+          <a href="/profile" class="profile-link">
+            <i class="fas fa-user"></i> 
+          </a>
+          <a href="/login.html" class="logout-link">
+            <i class="fas fa-sign-out-alt"></i> 
+          </a>
+      </div>
       </nav>
     </header>
 
@@ -352,6 +403,8 @@
         <h1 class="page-title">Listem</h1>
         <p class="page-subtitle">Favori filmleriniz ve izleme listeniz</p>
       </div>
+
+      <div id="errorMessage" class="error-message" style="display: none;"></div>
 
       <div class="stats" id="stats">
         <div class="stat-item">
@@ -412,20 +465,24 @@
       </div>
     </main>
 
-    <script src="/js/authUtils.js"></script>
     <script src="/js/userLists.js"></script>
     <script>
       class MyListPage {
         constructor() {
+          this.userListsAPI = new UserListsAPI();
           this.userLists = null;
           this.activeTab = "favorites";
           this.init();
         }
 
         async init() {
-          this.checkAuthentication();
-          this.setupEventListeners();
-          await this.loadUserLists();
+          try {
+            this.checkAuthentication();
+            this.setupEventListeners();
+            await this.loadUserLists();
+          } catch (error) {
+            this.showError('Sayfa yüklenirken hata oluştu: ' + error.message);
+          }
         }
 
         checkAuthentication() {
@@ -455,11 +512,14 @@
           });
 
           // Logout
-          document.getElementById("logoutBtn").addEventListener("click", () => {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            window.location.href = "/login.html";
-          });
+          const logoutBtn = document.getElementById("logoutBtn");
+          if (logoutBtn) {
+            logoutBtn.addEventListener("click", () => {
+              localStorage.removeItem("authToken");
+              localStorage.removeItem("user");
+              window.location.href = "/login.html";
+            });
+          }
         }
 
         switchTab(tabName) {
@@ -482,36 +542,47 @@
 
         async loadUserLists() {
           try {
-            const response = await UserListsAPI.getUserLists();
+            const response = await this.userListsAPI.getUserLists();
             if (response.success) {
               this.userLists = response.data;
               this.updateStats();
               this.renderFavorites();
               this.renderWatchlist();
+              this.hideError();
             } else {
               throw new Error(response.message || "Listeler yüklenemedi");
             }
           } catch (error) {
             console.error("Error loading user lists:", error);
-            UserListsAPI.showNotification(
-              "Listeler yüklenirken hata oluştu",
-              "error"
-            );
+            this.showError("Listeler yüklenirken hata oluştu: " + error.message);
+          }
+        }
+
+        showError(message) {
+          const errorElement = document.getElementById("errorMessage");
+          if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = "block";
+          }
+        }
+
+        hideError() {
+          const errorElement = document.getElementById("errorMessage");
+          if (errorElement) {
+            errorElement.style.display = "none";
           }
         }
 
         updateStats() {
           const favoritesCount =
-            (this.userLists.favorites.movies.length || 0) +
-            (this.userLists.favorites.series.length || 0);
+            (this.userLists.favorites.movies?.length || 0) +
+            (this.userLists.favorites.series?.length || 0);
           const watchlistCount =
-            (this.userLists.watchlist.movies.length || 0) +
-            (this.userLists.watchlist.series.length || 0);
+            (this.userLists.watchlist.movies?.length || 0) +
+            (this.userLists.watchlist.series?.length || 0);
 
-          document.getElementById("favoritesCount").textContent =
-            favoritesCount;
-          document.getElementById("watchlistCount").textContent =
-            watchlistCount;
+          document.getElementById("favoritesCount").textContent = favoritesCount;
+          document.getElementById("watchlistCount").textContent = watchlistCount;
         }
 
         renderFavorites() {
@@ -522,11 +593,11 @@
           loading.style.display = "none";
 
           const allFavorites = [
-            ...this.userLists.favorites.movies.map((item) => ({
+            ...(this.userLists.favorites.movies || []).map((item) => ({
               ...item,
               type: "movie",
             })),
-            ...this.userLists.favorites.series.map((item) => ({
+            ...(this.userLists.favorites.series || []).map((item) => ({
               ...item,
               type: "series",
             })),
@@ -552,11 +623,11 @@
           loading.style.display = "none";
 
           const allWatchlist = [
-            ...this.userLists.watchlist.movies.map((item) => ({
+            ...(this.userLists.watchlist.movies || []).map((item) => ({
               ...item,
               type: "movie",
             })),
-            ...this.userLists.watchlist.series.map((item) => ({
+            ...(this.userLists.watchlist.series || []).map((item) => ({
               ...item,
               type: "series",
             })),
@@ -576,42 +647,42 @@
 
         createContentCard(item, listType) {
           const imgBase = "https://image.tmdb.org/t/p/w500";
-          const title = item.title || item.name;
+          const title = item.title || item.name || "Unknown Title";
           const date = item.releaseDate || item.firstAirDate;
           const year = date ? new Date(date).getFullYear() : "N/A";
           const rating = item.voteAverage
-            ? Math.round(item.voteAverage * 10)
+            ? Math.round(item.voteAverage * 10) / 10
             : "N/A";
           const posterUrl = item.posterPath
             ? imgBase + item.posterPath
-            : "https://via.placeholder.com/300x450";
+            : "https://via.placeholder.com/300x450/333/666?text=No+Image";
           const detailUrl =
             item.type === "movie"
               ? `/movies/${item._id}`
               : `/series/${item._id}`;
 
           return `
-                    <div class="content-card" onclick="window.location.href='${detailUrl}'">
-                        <button class="remove-btn" onclick="event.stopPropagation(); removeFromList('${item._id}', '${item.type}', '${listType}')" title="Listeden Çıkar">×</button>
-                        <img class="card-image" src="${posterUrl}" alt="${title}" onerror="this.src='https://via.placeholder.com/300x450'">
-                        <div class="card-info">
-                            <h3 class="card-title">${title}</h3>
-                            <div class="card-meta">
-                                <span>${year}</span>
-                                <span class="card-rating">${rating}%</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+            <div class="content-card" onclick="window.location.href='${detailUrl}'">
+              <button class="remove-btn" onclick="event.stopPropagation(); removeFromList('${item._id}', '${item.type}', '${listType}')" title="Listeden Çıkar">×</button>
+              <img class="card-image" src="${posterUrl}" alt="${title}" onerror="this.src='https://via.placeholder.com/300x450/333/666?text=No+Image'">
+              <div class="card-info">
+                <h3 class="card-title">${title}</h3>
+                <div class="card-meta">
+                  <span>${year}</span>
+                  <span class="card-rating">⭐ ${rating}</span>
+                </div>
+              </div>
+            </div>
+          `;
         }
 
         async removeFromList(itemId, itemType, listType) {
           try {
             let result;
             if (listType === "favorites") {
-              result = await UserListsAPI.removeFromFavorites(itemId, itemType);
+              result = await this.userListsAPI.removeFromFavorites(itemId, itemType);
             } else {
-              result = await UserListsAPI.removeFromWatchlist(itemId, itemType);
+              result = await this.userListsAPI.removeFromWatchlist(itemId, itemType);
             }
 
             if (result.success) {

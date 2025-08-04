@@ -107,6 +107,8 @@ main {
   cursor: not-allowed;
 }
 
+
+
 /* Loading */
 .loading {
   display: flex;

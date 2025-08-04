@@ -65,6 +65,7 @@
     .action-buttons {
       display: flex;
       gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .btn {
@@ -74,6 +75,12 @@
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .btn-play {
@@ -81,7 +88,7 @@
       color: black;
     }
 
-    .btn-play:hover {
+    .btn-play:hover:not(:disabled) {
       background: rgba(255,255,255,0.8);
     }
 
@@ -90,7 +97,7 @@
       color: white;
     }
 
-    .btn-secondary:hover {
+    .btn-secondary:hover:not(:disabled) {
       background: rgba(109,109,110,0.5);
     }
 
@@ -99,9 +106,17 @@
       color: white;
     }
 
+    .btn-secondary.in-favorites:hover:not(:disabled) {
+      background: #b8070f;
+    }
+
     .btn-secondary.in-watchlist {
       background: #4CAF50;
       color: white;
+    }
+
+    .btn-secondary.in-watchlist:hover:not(:disabled) {
+      background: #45a049;
     }
 
     .loading {
@@ -111,14 +126,35 @@
       color: #bbb;
     }
 
+    .error-message {
+      text-align: center;
+      padding: 3rem;
+      font-size: 1.3rem;
+      color: #e50914;
+    }
+
     @media (max-width: 768px) {
-      .hero-section { height: 50vh; padding: 2rem; }
-      .movie-title { font-size: 2rem; }
+      .hero-section { 
+        height: auto; 
+        min-height: 50vh; 
+        padding: 2rem; 
+      }
+      .movie-title { 
+        font-size: 2rem; 
+      }
+      .action-buttons {
+        flex-direction: column;
+      }
+      .btn {
+        width: 100%;
+        text-align: center;
+      }
     }
   </style>
 </head>
 <body>
   <div id="loader" class="loading">Loading movie...</div>
+  <div id="errorMessage" class="error-message" style="display: none;"></div>
 
   <div id="mainContent" style="display: none;">
     <div class="hero-section">
@@ -145,51 +181,126 @@
 
     async function loadMovieDetails() {
       const movieId = window.location.pathname.split('/').pop();
-      const res = await fetch(`/api/movies/${movieId}`);
       const loader = document.getElementById("loader");
       const content = document.getElementById("mainContent");
+      const errorMessage = document.getElementById("errorMessage");
 
-      if (!res.ok) {
-        loader.textContent = "Failed to load movie.";
-        return;
+      try {
+        const res = await fetch(`/api/movies/${movieId}`);
+
+        if (!res.ok) {
+          throw new Error(`Failed to load movie: ${res.status} ${res.statusText}`);
+        }
+
+        movieData = await res.json();
+
+        // Hide loader and show content
+        loader.style.display = "none";
+        content.style.display = "block";
+        errorMessage.style.display = "none";
+
+        // Populate movie details
+        populateMovieDetails();
+
+        // Initialize list buttons
+        initializeListButtons();
+
+      } catch (error) {
+        console.error('Error loading movie details:', error);
+        loader.style.display = "none";
+        errorMessage.style.display = "block";
+        errorMessage.textContent = error.message || "Failed to load movie details. Please try again.";
       }
+    }
 
-      movieData = await res.json();
+    function populateMovieDetails() {
+      if (!movieData) return;
 
-      loader.style.display = "none";
-      content.style.display = "block";
-
-      document.getElementById("movieTitle").textContent = movieData.title;
+      // Set movie title
+      document.getElementById("movieTitle").textContent = movieData.title || "Unknown Title";
+      
+      // Set movie overview
       document.getElementById("movieOverview").textContent = movieData.overview || "No overview available.";
 
-      document.getElementById("releaseYear").textContent = movieData.releaseDate ? new Date(movieData.releaseDate).getFullYear() : "Unknown";
-      document.getElementById("originalLanguage").textContent = movieData.originalLanguage?.toUpperCase() || "N/A";
-      document.getElementById("voteAverage").textContent = `${Math.round(movieData.voteAverage * 10)}% Match`;
+      // Set release year
+      const releaseYearElement = document.getElementById("releaseYear");
+      if (movieData.releaseDate) {
+        releaseYearElement.textContent = new Date(movieData.releaseDate).getFullYear();
+      } else {
+        releaseYearElement.style.display = "none";
+      }
 
+      // Set original language
+      const languageElement = document.getElementById("originalLanguage");
+      if (movieData.originalLanguage) {
+        languageElement.textContent = movieData.originalLanguage.toUpperCase();
+      } else {
+        languageElement.style.display = "none";
+      }
+
+      // Set vote average
+      const voteElement = document.getElementById("voteAverage");
+      if (movieData.voteAverage !== undefined && movieData.voteAverage !== null) {
+        voteElement.textContent = `⭐ ${movieData.voteAverage.toFixed(1)}`;
+      } else {
+        voteElement.style.display = "none";
+      }
+
+      // Set backdrop image
       const imgBase = "https://image.tmdb.org/t/p/original";
-      document.getElementById("heroBackdrop").src = movieData.backdropPath ? imgBase + movieData.backdropPath : "https://via.placeholder.com/1920x1080";
-
-      // Initialize list buttons
-      initializeListButtons();
+      const backdropElement = document.getElementById("heroBackdrop");
+      if (movieData.backdropPath) {
+        backdropElement.src = imgBase + movieData.backdropPath;
+      } else {
+        backdropElement.src = "https://via.placeholder.com/1920x1080/333/666?text=No+Image";
+      }
     }
 
     function initializeListButtons() {
-      if (!movieData) return;
+      if (!movieData || !movieData._id) {
+        console.error('Movie data or ID not available for list buttons');
+        return;
+      }
 
       const watchlistBtn = document.getElementById('addToWatchlistBtn');
       const favoritesBtn = document.getElementById('addToFavoritesBtn');
 
-      // Initialize buttons with movie data
-      if (watchlistBtn) {
-        new WatchlistButton(watchlistBtn, movieData._id, 'movie');
+      // Check if user is authenticated
+      const authToken = localStorage.getItem('authToken');
+      if (!authToken) {
+        // Hide buttons or show login prompt
+        watchlistBtn.style.display = 'none';
+        favoritesBtn.style.display = 'none';
+        return;
       }
 
-      if (favoritesBtn) {
-        new FavoriteButton(favoritesBtn, movieData._id, 'movie');
+      // Initialize buttons with movie data
+      try {
+        if (watchlistBtn && typeof WatchlistButton === 'function') {
+          new WatchlistButton(watchlistBtn, movieData._id, 'movie');
+        }
+
+        if (favoritesBtn && typeof FavoriteButton === 'function') {
+          new FavoriteButton(favoritesBtn, movieData._id, 'movie');
+        }
+      } catch (error) {
+        console.error('Error initializing list buttons:', error);
       }
     }
 
-    document.addEventListener("DOMContentLoaded", loadMovieDetails);
+  
+    // Initialize everything when DOM is loaded
+    document.addEventListener("DOMContentLoaded", () => {
+      loadMovieDetails();
+    });
+
+    // Handle authentication errors globally
+    window.addEventListener('unhandledrejection', (event) => {
+      if (event.reason && event.reason.message && event.reason.message.includes('401')) {
+        console.warn('Authentication required');
+        // Optionally redirect to login or show login modal
+      }
+    });
   </script>
 </body>
 </html>
