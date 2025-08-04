@@ -27,23 +27,6 @@ router.get("/", async (req, res) => {
     }
 
     let sortOptions = {};
-    switch (sort) {
-      case "latest":
-        sortOptions = { createdAt: -1 };
-        break;
-      case "year":
-        sortOptions = { firstAirDate: -1 };
-        break;
-      case "title":
-        sortOptions = { title: 1 };
-        break;
-      case "rating":
-        sortOptions = { rating: -1 };
-        break;
-      default:
-        sortOptions = { createdAt: -1 };
-    }
-
     switch (filter) {
       case "popular":
         sortOptions = { rating: -1, viewCount: -1 };
@@ -54,6 +37,23 @@ router.get("/", async (req, res) => {
       case "added":
         sortOptions = { createdAt: -1 };
         break;
+      default:
+        switch (sort) {
+          case "latest":
+            sortOptions = { createdAt: -1 };
+            break;
+          case "year":
+            sortOptions = { firstAirDate: -1 };
+            break;
+          case "title":
+            sortOptions = { title: 1 };
+            break;
+          case "rating":
+            sortOptions = { rating: -1 };
+            break;
+          default:
+            sortOptions = { createdAt: -1 };
+        }
     }
 
     const [seriesList, totalCount] = await Promise.all([

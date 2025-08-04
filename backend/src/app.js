@@ -18,12 +18,12 @@ const fs = require('fs');
 const frontendPath = path.resolve(__dirname, '../../frontend');
 const htmlFiles = fs.readdirSync(frontendPath).filter(file => file.endsWith('.html'));
 
-app.get('/movies-list', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'movies-list'));
+app.get('/movies_list', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'movies_list'));
 });
 
-app.get('/series-list', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'series-list.html'));
+app.get('/series_list', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'series_list.html'));
 });
 
 app.get('/genres', (req, res) => {
@@ -40,6 +40,14 @@ app.get('/profile', (req, res) => {
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(frontendPath, 'login.html'));
+});
+
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'register.html'));
+});
+
+app.get('/my_list', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'my_list.html'));
 });
 
 app.get('/series/:id', (req, res) => {

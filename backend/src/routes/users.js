@@ -380,4 +380,282 @@ router.post("/delete", auth.checkRoles("user_delete"), async (req, res) => {
   }
 });
 
+
+router.post("/favorites/add", async (req, res) => {
+  try {
+    const { contentId, contentType } = req.body;
+    
+    if (!contentId || !contentType) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        i18n.translate("COMMON.FIELD_REQUIRED_TITLE", req.user?.language, ["Content ID and Type"]),
+        i18n.translate("COMMON.FIELD_REQUIRED_DESCRIPTION", req.user?.language, ["Content ID and Type"])
+      );
+    }
+
+    if (!['movie', 'series'].includes(contentType)) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        "Invalid content type",
+        "Content type must be either 'movie' or 'series'"
+      );
+    }
+
+    const user = await Users.findById(req.user.id);
+    if (!user) {
+      throw new CustomError(
+        Enum.HTTP_CODES.NOT_FOUND,
+        "User not found",
+        "User does not exist"
+      );
+    }
+
+    const field = contentType === 'movie' ? 'favorites.movies' : 'favorites.series';
+    const currentFavorites = contentType === 'movie' ? user.favorites.movies : user.favorites.series;
+
+    if (currentFavorites.includes(contentId)) {
+      return res.json(Response.success({ 
+        success: true, 
+        message: "Already in favorites",
+        inFavorites: true 
+      }));
+    }
+
+    await Users.updateOne(
+      { _id: req.user.id },
+      { $push: { [field]: contentId } }
+    );
+
+    res.json(Response.success({ 
+      success: true, 
+      message: "Added to favorites",
+      inFavorites: true 
+    }));
+
+  } catch (err) {
+    let errorResponse = Response.error(err, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+router.post("/favorites/remove", async (req, res) => {
+  try {
+    const { contentId, contentType } = req.body;
+    
+    if (!contentId || !contentType) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        i18n.translate("COMMON.FIELD_REQUIRED_TITLE", req.user?.language, ["Content ID and Type"]),
+        i18n.translate("COMMON.FIELD_REQUIRED_DESCRIPTION", req.user?.language, ["Content ID and Type"])
+      );
+    }
+
+    if (!['movie', 'series'].includes(contentType)) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        "Invalid content type",
+        "Content type must be either 'movie' or 'series'"
+      );
+    }
+
+    const field = contentType === 'movie' ? 'favorites.movies' : 'favorites.series';
+
+    await Users.updateOne(
+      { _id: req.user.id },
+      { $pull: { [field]: contentId } }
+    );
+
+    res.json(Response.success({ 
+      success: true, 
+      message: "Removed from favorites",
+      inFavorites: false 
+    }));
+
+  } catch (err) {
+    let errorResponse = Response.error(err, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+router.post("/watchlist/add", async (req, res) => {
+  try {
+    const { contentId, contentType } = req.body;
+    
+    if (!contentId || !contentType) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        i18n.translate("COMMON.FIELD_REQUIRED_TITLE", req.user?.language, ["Content ID and Type"]),
+        i18n.translate("COMMON.FIELD_REQUIRED_DESCRIPTION", req.user?.language, ["Content ID and Type"])
+      );
+    }
+
+    if (!['movie', 'series'].includes(contentType)) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        "Invalid content type",
+        "Content type must be either 'movie' or 'series'"
+      );
+    }
+
+    const user = await Users.findById(req.user.id);
+    if (!user) {
+      throw new CustomError(
+        Enum.HTTP_CODES.NOT_FOUND,
+        "User not found",
+        "User does not exist"
+      );
+    }
+
+    const field = contentType === 'movie' ? 'watchlist.movies' : 'watchlist.series';
+    const currentWatchlist = contentType === 'movie' ? user.watchlist.movies : user.watchlist.series;
+
+    if (currentWatchlist.includes(contentId)) {
+      return res.json(Response.success({ 
+        success: true, 
+        message: "Already in watchlist",
+        inWatchlist: true 
+      }));
+    }
+
+    await Users.updateOne(
+      { _id: req.user.id },
+      { $push: { [field]: contentId } }
+    );
+
+    res.json(Response.success({ 
+      success: true, 
+      message: "Added to watchlist",
+      inWatchlist: true 
+    }));
+
+  } catch (err) {
+    let errorResponse = Response.error(err, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+router.post("/watchlist/remove", async (req, res) => {
+  try {
+    const { contentId, contentType } = req.body;
+    
+    if (!contentId || !contentType) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        i18n.translate("COMMON.FIELD_REQUIRED_TITLE", req.user?.language, ["Content ID and Type"]),
+        i18n.translate("COMMON.FIELD_REQUIRED_DESCRIPTION", req.user?.language, ["Content ID and Type"])
+      );
+    }
+
+    if (!['movie', 'series'].includes(contentType)) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        "Invalid content type",
+        "Content type must be either 'movie' or 'series'"
+      );
+    }
+
+    const field = contentType === 'movie' ? 'watchlist.movies' : 'watchlist.series';
+
+    await Users.updateOne(
+      { _id: req.user.id },
+      { $pull: { [field]: contentId } }
+    );
+
+    res.json(Response.success({ 
+      success: true, 
+      message: "Removed from watchlist",
+      inWatchlist: false 
+    }));
+
+  } catch (err) {
+    let errorResponse = Response.error(err, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+router.get("/lists/status/:contentType/:contentId", async (req, res) => {
+  try {
+    const { contentId, contentType } = req.params;
+    
+    if (!['movie', 'series'].includes(contentType)) {
+      throw new CustomError(
+        Enum.HTTP_CODES.BAD_REQUEST,
+        "Invalid content type",
+        "Content type must be either 'movie' or 'series'"
+      );
+    }
+
+    const user = await Users.findById(req.user.id);
+    if (!user) {
+      throw new CustomError(
+        Enum.HTTP_CODES.NOT_FOUND,
+        "User not found",
+        "User does not exist"
+      );
+    }
+
+    const favorites = contentType === 'movie' ? user.favorites.movies : user.favorites.series;
+    const watchlist = contentType === 'movie' ? user.watchlist.movies : user.watchlist.series;
+
+    res.json(Response.success({
+      inFavorites: favorites.includes(contentId),
+      inWatchlist: watchlist.includes(contentId)
+    }));
+
+  } catch (err) {
+    let errorResponse = Response.error(err, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+router.get("/favorites", async (req, res) => {
+  try {
+    const user = await Users.findById(req.user.id)
+      .populate('favorites.movies')
+      .populate('favorites.series');
+    
+    if (!user) {
+      throw new CustomError(
+        Enum.HTTP_CODES.NOT_FOUND,
+        "User not found",
+        "User does not exist"
+      );
+    }
+
+    res.json(Response.success({
+      movies: user.favorites.movies,
+      series: user.favorites.series
+    }));
+
+  } catch (err) {
+    let errorResponse = Response.error(err, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+router.get("/watchlist", async (req, res) => {
+  try {
+    const user = await Users.findById(req.user.id)
+      .populate('watchlist.movies')
+      .populate('watchlist.series');
+    
+    if (!user) {
+      throw new CustomError(
+        Enum.HTTP_CODES.NOT_FOUND,
+        "User not found",
+        "User does not exist"
+      );
+    }
+
+    res.json(Response.success({
+      movies: user.watchlist.movies,
+      series: user.watchlist.series
+    }));
+
+  } catch (err) {
+    let errorResponse = Response.error(err, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
 module.exports = router;
