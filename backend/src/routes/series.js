@@ -1,40 +1,43 @@
-const express = require('express');
+const express = require("express");
 
-const Series = require('../models/Series');
-const Season = require('../models/Season');
-const Episode = require('../models/Episode');
-const Response = require('../lib/Response');
+const Series = require("../models/Series");
+const Genre = require("../models/Genre");
+const Season = require("../models/Season");
+const Episode = require("../models/Episode");
+const Response = require("../lib/Response");
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 12;
     const skip = (page - 1) * limit;
-    const filter = req.query.filter || 'popular';
-    const category = req.query.category || 'all';
-    const sort = req.query.sort || 'latest';
+    const filter = req.query.filter || "popular";
+    const category = req.query.category || "all";
+    const sort = req.query.sort || "latest";
 
     let query = { voteCount: { $gt: 500 } };
 
-    if (category !== 'all') {
-      query.genre = new RegExp(category, 'i'); 
+    if (category !== "all") {
+      const genreDoc = await Genre.findOne({ name: new RegExp(category, "i") });
+      if (genreDoc) {
+        query.genres = genreDoc._id;
+      }
     }
 
-    // Sorting logic
     let sortOptions = {};
     switch (sort) {
-      case 'latest':
+      case "latest":
         sortOptions = { createdAt: -1 };
         break;
-      case 'year':
+      case "year":
         sortOptions = { firstAirDate: -1 };
         break;
-      case 'title':
+      case "title":
         sortOptions = { title: 1 };
         break;
-      case 'rating':
+      case "rating":
         sortOptions = { rating: -1 };
         break;
       default:
@@ -42,25 +45,24 @@ router.get('/', async (req, res) => {
     }
 
     switch (filter) {
-      case 'popular':
+      case "popular":
         sortOptions = { rating: -1, viewCount: -1 };
         break;
-      case 'latest':
+      case "latest":
         sortOptions = { firstAirDate: -1 };
         break;
-      case 'added':
+      case "added":
         sortOptions = { createdAt: -1 };
         break;
     }
 
-    // Fetch paginated series and total count
     const [seriesList, totalCount] = await Promise.all([
       Series.find(query)
         .skip(skip)
         .limit(limit)
         .sort(sortOptions)
-        .select('title posterPath firstAirDate rating genre createdAt'), // numberOfSeasons eklenecek
-      Series.countDocuments(query)
+        .select("title posterPath firstAirDate rating genre createdAt"),
+      Series.countDocuments(query),
     ]);
 
     const seriesWithSeasons = await Promise.all(
@@ -84,40 +86,43 @@ router.get('/', async (req, res) => {
       hasPrev: page > 1,
     });
   } catch (error) {
-    console.error('Error fetching series:', error);
-    res.status(500).json({ error: 'Failed to fetch series' });
+    console.error("Error fetching series:", error);
+    res.status(500).json({ error: "Failed to fetch series" });
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const seriesId = req.params.id;
-    
-    const series = await Series.findById(seriesId).populate('genres');
+
+    const series = await Series.findById(seriesId).populate("genres");
     if (!series) {
-      return res.status(404).json({ error: 'Series not found' });
+      return res.status(404).json({ error: "Series not found" });
     }
 
-    const seasons = await Season.find({ tvShow: seriesId }).sort({ seasonNumber: 1 });
-    
+    const seasons = await Season.find({ tvShow: seriesId }).sort({
+      seasonNumber: 1,
+    });
+
     const seasonsWithEpisodes = await Promise.all(
       seasons.map(async (season) => {
-        const episodes = await Episode.find({ season: season._id }).sort({ episodeNumber: 1 });
+        const episodes = await Episode.find({ season: season._id }).sort({
+          episodeNumber: 1,
+        });
         return {
           ...season.toObject(),
-          episodes
+          episodes,
         };
       })
     );
 
     res.json({
       series,
-      seasons: seasonsWithEpisodes
+      seasons: seasonsWithEpisodes,
     });
-    
   } catch (error) {
-    console.error('Error fetching series:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error fetching series:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
