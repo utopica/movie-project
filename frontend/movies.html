@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Movie Detail</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #141414;
+      color: white;
+      font-family: 'Helvetica Neue', sans-serif;
+      overflow-x: hidden;
+    }
+
+    .hero-section {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 60px;
+      background: linear-gradient(to top, rgba(20,20,20,0.9), rgba(20,20,20,0.4));
+    }
+
+    .hero-backdrop {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    .hero-content {
+      max-width: 600px;
+      z-index: 2;
+    }
+
+    .movie-title {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+
+    .movie-meta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    .badge {
+      background: rgba(255,255,255,0.2);
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+    }
+
+    .movie-overview {
+      font-size: 1.2rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.8rem 2rem;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-play {
+      background: white;
+      color: black;
+    }
+
+    .btn-play:hover {
+      background: rgba(255,255,255,0.8);
+    }
+
+    .btn-secondary {
+      background: rgba(109,109,110,0.7);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(109,109,110,0.5);
+    }
+
+    .btn-secondary.in-favorites {
+      background: #e50914;
+      color: white;
+    }
+
+    .btn-secondary.in-watchlist {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      font-size: 1.3rem;
+      color: #bbb;
+    }
+
+    @media (max-width: 768px) {
+      .hero-section { height: 50vh; padding: 2rem; }
+      .movie-title { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loader" class="loading">Loading movie...</div>
+
+  <div id="mainContent" style="display: none;">
+    <div class="hero-section">
+      <img id="heroBackdrop" class="hero-backdrop" src="" alt="Backdrop" />
+      <div class="hero-content">
+        <h1 id="movieTitle" class="movie-title"></h1>
+        <div class="movie-meta">
+          <span id="releaseYear" class="badge"></span>
+          <span id="originalLanguage" class="badge"></span>
+          <span id="voteAverage" class="badge"></span>
+        </div>
+        <p id="movieOverview" class="movie-overview"></p>
+        <div class="action-buttons">
+          <button class="btn btn-secondary" id="addToWatchlistBtn">+ My List</button>
+          <button class="btn btn-secondary" id="addToFavoritesBtn">🤍 Add to Favorites</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/userLists.js"></script>
+  <script>
+    let movieData = null;
+
+    async function loadMovieDetails() {
+      const movieId = window.location.pathname.split('/').pop();
+      const res = await fetch(`/api/movies/${movieId}`);
+      const loader = document.getElementById("loader");
+      const content = document.getElementById("mainContent");
+
+      if (!res.ok) {
+        loader.textContent = "Failed to load movie.";
+        return;
+      }
+
+      movieData = await res.json();
+
+      loader.style.display = "none";
+      content.style.display = "block";
+
+      document.getElementById("movieTitle").textContent = movieData.title;
+      document.getElementById("movieOverview").textContent = movieData.overview || "No overview available.";
+
+      document.getElementById("releaseYear").textContent = movieData.releaseDate ? new Date(movieData.releaseDate).getFullYear() : "Unknown";
+      document.getElementById("originalLanguage").textContent = movieData.originalLanguage?.toUpperCase() || "N/A";
+      document.getElementById("voteAverage").textContent = `${Math.round(movieData.voteAverage * 10)}% Match`;
+
+      const imgBase = "https://image.tmdb.org/t/p/original";
+      document.getElementById("heroBackdrop").src = movieData.backdropPath ? imgBase + movieData.backdropPath : "https://via.placeholder.com/1920x1080";
+
+      // Initialize list buttons
+      initializeListButtons();
+    }
+
+    function initializeListButtons() {
+      if (!movieData) return;
+
+      const watchlistBtn = document.getElementById('addToWatchlistBtn');
+      const favoritesBtn = document.getElementById('addToFavoritesBtn');
+
+      // Initialize buttons with movie data
+      if (watchlistBtn) {
+        new WatchlistButton(watchlistBtn, movieData._id, 'movie');
+      }
+
+      if (favoritesBtn) {
+        new FavoriteButton(favoritesBtn, movieData._id, 'movie');
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadMovieDetails);
+  </script>
+</body>
+</html>

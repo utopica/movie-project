@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TV Shows - Netflix Style</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background-color: #141414;
+      color: white;
+      font-family: 'Helvetica Neue', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: linear-gradient(to bottom, rgba(20,20,20,0.9), transparent);
+      padding: 1rem 4rem;
+      z-index: 100;
+      transition: background-color 0.3s ease;
+    }
+
+    .header.scrolled {
+      background-color: #141414;
+    }
+
+    .nav-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #e50914;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: #e50914;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-top: 80px;
+      padding: 2rem 4rem;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .filter-label {
+      font-weight: 500;
+      color: #bbb;
+    }
+
+    .filter-select {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: #e50914;
+    }
+
+    .filter-select option {
+      background: #333;
+      color: white;
+    }
+
+    /* Series Grid */
+    .series-container {
+      position: relative;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      font-size: 1.3rem;
+      color: #bbb;
+    }
+
+    .series-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .series-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .series-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+
+    .series-poster {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      background: #333;
+    }
+
+    .series-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(229, 9, 20, 0.9);
+      color: white;
+      padding: 0.3rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .series-info {
+      padding: 1rem;
+    }
+
+    .series-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      line-height: 1.3;
+      display: -webkit-box;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .series-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #bbb;
+      margin-bottom: 0.5rem;
+    }
+
+    .series-year {
+      background: rgba(255,255,255,0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+    }
+
+    .series-rating {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+    }
+
+    .rating-star {
+      color: #ffd700;
+      font-size: 0.8rem;
+    }
+
+    .series-seasons {
+      font-size: 0.8rem;
+      color: #999;
+      text-align: center;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 2rem;
+    }
+
+    .pagination button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #e50914;
+      border-color: #e50914;
+    }
+
+    .pagination button.active {
+      background: #e50914;
+      border-color: #e50914;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Error/Empty States */
+    .error-message,
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #bbb;
+    }
+
+    .error-message {
+      color: #e50914;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header,
+      .main-content {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      .nav-content {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .nav-links {
+        gap: 1rem;
+      }
+
+      .page-title {
+        font-size: 2rem;
+      }
+
+      .filters {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+      }
+
+      .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+      }
+
+      .series-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+      }
+
+      .series-poster {
+        height: 225px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .series-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="nav-content">
+      <a href="/" class="logo">
+                <i class="fas fa-film"></i>
+                What2Watch
+            </a>
+      <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/movies">Movies</a>
+        <a href="/series">TV Shows</a>
+        <a href="/genres" class="active">Browse</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">TV Shows</h1>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filter-group">
+        <label class="filter-label">Genre:</label>
+        <select id="genreFilter" class="filter-select">
+          <option value="all">All Genres</option>
+          <option value="action">Action</option>
+          <option value="adventure">Adventure</option>
+          <option value="animation">Animation</option>
+          <option value="comedy">Comedy</option>
+          <option value="crime">Crime</option>
+          <option value="documentary">Documentary</option>
+          <option value="drama">Drama</option>
+          <option value="family">Family</option>
+          <option value="fantasy">Fantasy</option>
+          <option value="history">History</option>
+          <option value="horror">Horror</option>
+          <option value="music">Music</option>
+          <option value="mystery">Mystery</option>
+          <option value="romance">Romance</option>
+          <option value="science fiction">Science Fiction</option>
+          <option value="thriller">Thriller</option>
+          <option value="war">War</option>
+          <option value="western">Western</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Year:</label>
+        <select id="yearFilter" class="filter-select">
+          <option value="all">All Years</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+          <option value="2022">2022</option>
+          <option value="2021">2021</option>
+          <option value="2020">2020</option>
+          <option value="2010s">2010-2019</option>
+          <option value="2000s">2000-2009</option>
+          <option value="1990s">1990-1999</option>
+          <option value="older">Before 1990</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Sort by:</label>
+        <select id="sortFilter" class="filter-select">
+          <option value="popular">Most Popular</option>
+          <option value="latest">Latest Added</option>
+          <option value="year">Air Date</option>
+          <option value="title">Title (A-Z)</option>
+          <option value="rating">Highest Rated</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Rating:</label>
+        <select id="ratingFilter" class="filter-select">
+          <option value="all">All Ratings</option>
+          <option value="9+">9.0+ Stars</option>
+          <option value="8+">8.0+ Stars</option>
+          <option value="7+">7.0+ Stars</option>
+          <option value="6+">6.0+ Stars</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">Seasons:</label>
+        <select id="seasonsFilter" class="filter-select">
+          <option value="all">All</option>
+          <option value="1">1 Season</option>
+          <option value="2-3">2-3 Seasons</option>
+          <option value="4-6">4-6 Seasons</option>
+          <option value="7+">7+ Seasons</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Series Container -->
+    <div class="series-container">
+      <div id="loading" class="loading">Loading TV shows...</div>
+      <div id="errorMessage" class="error-message" style="display: none;"></div>
+      <div id="emptyState" class="empty-state" style="display: none;">
+        No TV shows found matching your criteria.
+      </div>
+
+      <div id="seriesGrid" class="series-grid" style="display: none;"></div>
+
+      <!-- Pagination -->
+      <div id="pagination" class="pagination" style="display: none;">
+        <button id="prevPage" onclick="changePage('prev')">← Previous</button>
+        <span id="pageInfo"></span>
+        <button id="nextPage" onclick="changePage('next')">Next →</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentFilters = {
+      genre: 'all',
+      year: 'all',
+      sort: 'popular',
+      rating: 'all',
+      seasons: 'all'
+    };
+
+    // Header scroll effect
+    window.addEventListener('scroll', () => {
+      const header = document.getElementById('header');
+      if (window.scrollY > 100) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // Filter event listeners
+    document.getElementById('genreFilter').addEventListener('change', (e) => {
+      currentFilters.genre = e.target.value;
+      currentPage = 1;
+      loadSeries();
+    });
+
+    document.getElementById('yearFilter').addEventListener('change', (e) => {
+      currentFilters.year = e.target.value;
+      currentPage = 1;
+      loadSeries();
+    });
+
+    document.getElementById('sortFilter').addEventListener('change', (e) => {
+      currentFilters.sort = e.target.value;
+      currentPage = 1;
+      loadSeries();
+    });
+
+    document.getElementById('ratingFilter').addEventListener('change', (e) => {
+      currentFilters.rating = e.target.value;
+      currentPage = 1;
+      loadSeries();
+    });
+
+    document.getElementById('seasonsFilter').addEventListener('change', (e) => {
+      currentFilters.seasons = e.target.value;
+      currentPage = 1;
+      loadSeries();
+    });
+
+    // Load series function
+    async function loadSeries() {
+      const loading = document.getElementById('loading');
+      const errorMessage = document.getElementById('errorMessage');
+      const emptyState = document.getElementById('emptyState');
+      const seriesGrid = document.getElementById('seriesGrid');
+      const pagination = document.getElementById('pagination');
+
+      // Show loading, hide others
+      loading.style.display = 'block';
+      errorMessage.style.display = 'none';
+      emptyState.style.display = 'none';
+      seriesGrid.style.display = 'none';
+      pagination.style.display = 'none';
+
+      try {
+        // Build query parameters
+        const params = new URLSearchParams({
+          page: currentPage,
+          limit: 20,
+          filter: currentFilters.sort,
+          sort: currentFilters.sort
+        });
+
+        if (currentFilters.genre !== 'all') {
+          params.append('category', currentFilters.genre);
+        }
+
+        const response = await fetch(`/api/series?${params}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch TV shows');
+        }
+
+        const data = await response.json();
+        
+        // Filter by year, rating and seasons on frontend
+        let filteredSeries = data.series || [];
+        
+        // Year filtering
+        if (currentFilters.year !== 'all') {
+          filteredSeries = filteredSeries.filter(series => {
+            if (!series.firstAirDate) return false;
+            const year = new Date(series.firstAirDate).getFullYear();
+            
+            switch (currentFilters.year) {
+              case '2024': return year === 2024;
+              case '2023': return year === 2023;
+              case '2022': return year === 2022;
+              case '2021': return year === 2021;
+              case '2020': return year === 2020;
+              case '2010s': return year >= 2010 && year <= 2019;
+              case '2000s': return year >= 2000 && year <= 2009;
+              case '1990s': return year >= 1990 && year <= 1999;
+              case 'older': return year < 1990;
+              default: return true;
+            }
+          });
+        }
+
+        // Rating filtering
+        if (currentFilters.rating !== 'all') {
+          filteredSeries = filteredSeries.filter(series => {
+            const rating = series.rating || 0;
+            switch (currentFilters.rating) {
+              case '9+': return rating >= 9.0;
+              case '8+': return rating >= 8.0;
+              case '7+': return rating >= 7.0;
+              case '6+': return rating >= 6.0;
+              default: return true;
+            }
+          });
+        }
+
+        // Seasons filtering
+        if (currentFilters.seasons !== 'all') {
+          filteredSeries = filteredSeries.filter(series => {
+            const seasons = series.numberOfSeasons || 0;
+            switch (currentFilters.seasons) {
+              case '1': return seasons === 1;
+              case '2-3': return seasons >= 2 && seasons <= 3;
+              case '4-6': return seasons >= 4 && seasons <= 6;
+              case '7+': return seasons >= 7;
+              default: return true;
+            }
+          });
+        }
+
+        loading.style.display = 'none';
+
+        if (filteredSeries.length === 0) {
+          emptyState.style.display = 'block';
+          return;
+        }
+
+        // Display series
+        displaySeries(filteredSeries);
+        
+        // Update pagination info
+        totalPages = data.totalPages || 1;
+        updatePagination(data);
+
+      } catch (error) {
+        console.error('Error loading TV shows:', error);
+        loading.style.display = 'none';
+        errorMessage.textContent = 'Failed to load TV shows. Please try again.';
+        errorMessage.style.display = 'block';
+      }
+    }
+
+    // Display series function
+    function displaySeries(series) {
+      const seriesGrid = document.getElementById('seriesGrid');
+      const imgBase = "https://image.tmdb.org/t/p/w500";
+      
+      seriesGrid.innerHTML = series.map(serie => `
+        <div class="series-card" onclick="openSeriesDetail('${serie._id}')">
+          <div class="series-badge">${serie.numberOfSeasons || 0} Season${(serie.numberOfSeasons || 0) !== 1 ? 's' : ''}</div>
+          <img 
+            class="series-poster" 
+            src="${serie.posterPath ? imgBase + serie.posterPath : 'https://via.placeholder.com/200x300?text=No+Image'}" 
+            alt="${serie.title}"
+            loading="lazy"
+          />
+          <div class="series-info">
+            <h3 class="series-title">${serie.title}</h3>
+            <div class="series-meta">
+              <span class="series-year">
+                ${serie.firstAirDate ? new Date(serie.firstAirDate).getFullYear() : 'N/A'}
+              </span>
+              <div class="series-rating">
+                <span class="rating-star">★</span>
+                <span>${serie.rating ? serie.rating.toFixed(1) : 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      seriesGrid.style.display = 'grid';
+    }
+
+    // Update pagination
+    function updatePagination(data) {
+      const pagination = document.getElementById('pagination');
+      const pageInfo = document.getElementById('pageInfo');
+      const prevButton = document.getElementById('prevPage');
+      const nextButton = document.getElementById('nextPage');
+
+      if (data.totalPages <= 1) {
+        pagination.style.display = 'none';
+        return;
+      }
+
+      pageInfo.textContent = `Page ${data.currentPage} of ${data.totalPages}`;
+      prevButton.disabled = !data.hasPrev;
+      nextButton.disabled = !data.hasNext;
+      
+      pagination.style.display = 'flex';
+    }
+
+    // Change page function
+    function changePage(direction) {
+      if (direction === 'prev' && currentPage > 1) {
+        currentPage--;
+      } else if (direction === 'next' && currentPage < totalPages) {
+        currentPage++;
+      }
+      loadSeries();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Open series detail
+    function openSeriesDetail(seriesId) {
+      // Navigate to series detail page
+      window.location.href = `/series/${seriesId}`;
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSeries();
+    });
+  </script>
+  <script src="/js/userLists.js"></script>
+</body>
+</html>

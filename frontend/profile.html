@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profil Sayfası - What2Watch</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: linear-gradient(
+          135deg,
+          #141414 0%,
+          #1a1a2e 50%,
+          #16213e 100%
+        );
+        color: white;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Header */
+      .header {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: linear-gradient(
+          to bottom,
+          rgba(20, 20, 20, 0.95),
+          rgba(20, 20, 20, 0.8)
+        );
+        backdrop-filter: blur(10px);
+        padding: 1rem 4rem;
+        z-index: 100;
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .header.scrolled {
+        background: rgba(20, 20, 20, 0.98);
+        backdrop-filter: blur(15px);
+      }
+
+      .nav-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #e50914;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .nav-links a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        position: relative;
+      }
+
+      .nav-links a:hover,
+      .nav-links a.active {
+        color: #e50914;
+        background: rgba(229, 9, 20, 0.1);
+      }
+
+      .profile-dropdown {
+        position: relative;
+      }
+
+      .profile-trigger {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: white;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .profile-trigger:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Main Content */
+      .main-content {
+        margin-top: 100px;
+        padding: 2rem 4rem 4rem;
+        min-height: calc(100vh - 100px);
+      }
+
+      .profile-container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+
+      .page-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #e50914, #ff6b35);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+      }
+
+      .page-subtitle {
+        font-size: 1.2rem;
+        color: #bbb;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      /* Profile Card */
+      .profile-card {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.05)
+        );
+        border-radius: 20px;
+        padding: 3rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        transition: all 0.4s ease;
+      }
+
+      .profile-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #e50914, #ff6b35, #4ecdc4);
+        border-radius: 20px 20px 0 0;
+      }
+
+      .profile-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+      }
+
+      /* Profile Avatar */
+      .profile-avatar {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .avatar-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e50914, #ff6b35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: white;
+        margin: 0 auto 1rem;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+      }
+
+      .avatar-circle:hover {
+        transform: scale(1.05);
+        box-shadow: 0 15px 40px rgba(229, 9, 20, 0.3);
+      }
+
+      /* Profile Info */
+      .profile-info {
+        display: grid;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .info-item {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .info-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateX(5px);
+      }
+
+      .info-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #e50914, #ff6b35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+        flex-shrink: 0;
+      }
+
+      .info-content {
+        flex: 1;
+      }
+
+      .info-label {
+        font-size: 0.9rem;
+        color: #bbb;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+      }
+
+      .info-value {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: white;
+      }
+
+      /* Stats Section */
+      .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+      }
+
+      .stat-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-3px);
+      }
+
+      .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #e50914;
+        display: block;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        font-size: 0.9rem;
+        color: #bbb;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* Action Buttons */
+      .profile-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+      }
+
+      .btn {
+        padding: 1rem 2rem;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      .btn:hover::before {
+        left: 100%;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #e50914, #ff6b35);
+        color: white;
+        box-shadow: 0 5px 15px rgba(229, 9, 20, 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(229, 9, 20, 0.4);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+      }
+
+      .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(220, 53, 69, 0.4);
+      }
+
+      /* Loading State */
+      .loading {
+        text-align: center;
+        padding: 3rem;
+      }
+
+      .loading-spinner {
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top: 3px solid #e50914;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Error State */
+      .error-message {
+        background: rgba(220, 53, 69, 0.1);
+        border: 1px solid rgba(220, 53, 69, 0.3);
+        border-radius: 12px;
+        padding: 1rem;
+        color: #ff6b6b;
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      /* Success State */
+      .success-message {
+        background: rgba(40, 167, 69, 0.1);
+        border: 1px solid rgba(40, 167, 69, 0.3);
+        border-radius: 12px;
+        padding: 1rem;
+        color: #28a745;
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .header,
+        .main-content {
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+
+        .nav-content {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .nav-links {
+          gap: 1rem;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .page-title {
+          font-size: 2rem;
+        }
+
+        .profile-card {
+          padding: 2rem;
+        }
+
+        .avatar-circle {
+          width: 100px;
+          height: 100px;
+          font-size: 2.5rem;
+        }
+
+        .profile-actions {
+          flex-direction: column;
+        }
+
+        .profile-stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 480px) {
+        .page-title {
+          font-size: 1.5rem;
+        }
+
+        .profile-card {
+          padding: 1.5rem;
+        }
+
+        .info-item {
+          padding: 1rem;
+        }
+
+        .profile-stats {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Animation Classes */
+      .fade-in {
+        animation: fadeIn 0.6s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .slide-in-left {
+        animation: slideInLeft 0.6s ease-out;
+      }
+
+      @keyframes slideInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      /* Hidden class for dynamic content */
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header" id="header">
+      <div class="nav-content">
+        <a href="/" class="logo">
+          <i class="fas fa-film"></i>
+          What2Watch
+        </a>
+        <nav class="nav-links">
+          <a href="/">Home</a>
+          <a href="/movies-list">Movies</a>
+          <a href="/series-list">TV Shows</a>
+          <a href="/genres" class="active">Browse</a>
+        </nav>
+        <div class="profile-dropdown">
+          <a href="#" class="profile-trigger">
+            <span class="icon"><i class="fas fa-user"></i></span>
+            <span class="username" id="headerUsername">Kullanıcı</span>
+            <i class="fas fa-chevron-down"></i>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="profile-container">
+        <!-- Page Header -->
+        <div class="page-header fade-in">
+          <h1 class="page-title">
+            <i class="fas fa-user-circle"></i>
+            Profil Bilgileri
+          </h1>
+          <p class="page-subtitle">
+            Hesap bilgilerinizi görüntüleyin ve yönetin
+          </p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="loading">
+          <div class="loading-spinner"></div>
+          <p>Profil bilgileri yükleniyor...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="error-message hidden">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span id="errorMessage">Bir hata oluştu.</span>
+        </div>
+
+        <!-- Success State -->
+        <div id="successState" class="success-message hidden">
+          <i class="fas fa-check-circle"></i>
+          <span id="successMessage">İşlem başarılı!</span>
+        </div>
+
+        <!-- Profile Content -->
+        <div id="profileContent" class="hidden">
+          <div class="profile-card slide-in-left">
+            <!-- Profile Avatar -->
+            <div class="profile-avatar">
+              <div class="avatar-circle">
+                <i class="fas fa-user"></i>
+              </div>
+            </div>
+
+            <!-- Profile Stats -->
+            <div class="profile-stats">
+              <div class="stat-card">
+                <span class="stat-number" id="favoriteCount">0</span>
+                <span class="stat-label">Favoriler</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number" id="watchlistCount">0</span>
+                <span class="stat-label">İzleme Listesi</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number" id="memberSince">2024</span>
+                <span class="stat-label">Üye Olma Yılı</span>
+              </div>
+            </div>
+
+            <!-- Profile Info -->
+            <div class="profile-info">
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="fas fa-user"></i>
+                </div>
+                <div class="info-content">
+                  <div class="info-label">Kullanıcı Adı</div>
+                  <div class="info-value" id="username">Yükleniyor...</div>
+                </div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="fas fa-envelope"></i>
+                </div>
+                <div class="info-content">
+                  <div class="info-label">E-posta</div>
+                  <div class="info-value" id="email">Yükleniyor...</div>
+                </div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="fas fa-globe"></i>
+                </div>
+                <div class="info-content">
+                  <div class="info-label">Dil</div>
+                  <div class="info-value" id="language">Yükleniyor...</div>
+                </div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-icon">
+                  <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="info-content">
+                  <div class="info-label">Hesap Durumu</div>
+                  <div class="info-value" id="accountStatus">Aktif</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="profile-actions">
+              <a href="/profile-edit" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+                Profili Düzenle
+              </a>
+              <a href="/my-lists" class="btn btn-secondary">
+                <i class="fas fa-list"></i>
+                Listelerim
+              </a>
+              <button onclick="AuthManager.logout()" class="btn btn-danger">
+                <i class="fas fa-sign-out-alt"></i>
+                Çıkış Yap
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="./js/auth.js"></script>
+    <script>
+      // Header scroll effect
+      window.addEventListener("scroll", () => {
+        const header = document.getElementById("header");
+        if (window.scrollY > 50) {
+          header.classList.add("scrolled");
+        } else {
+          header.classList.remove("scrolled");
+        }
+      });
+
+      // Profile management
+      class ProfileManager {
+        constructor() {
+          this.loadingState = document.getElementById("loadingState");
+          this.errorState = document.getElementById("errorState");
+          this.successState = document.getElementById("successState");
+          this.profileContent = document.getElementById("profileContent");
+        }
+
+        showLoading() {
+          this.loadingState.classList.remove("hidden");
+          this.errorState.classList.add("hidden");
+          this.successState.classList.add("hidden");
+          this.profileContent.classList.add("hidden");
+        }
+
+        showError(message) {
+          this.loadingState.classList.add("hidden");
+          this.errorState.classList.remove("hidden");
+          this.successState.classList.add("hidden");
+          this.profileContent.classList.add("hidden");
+          document.getElementById("errorMessage").textContent = message;
+        }
+
+        showSuccess(message) {
+          this.successState.classList.remove("hidden");
+          document.getElementById("successMessage").textContent = message;
+          setTimeout(() => {
+            this.successState.classList.add("hidden");
+          }, 3000);
+        }
+
+        showProfile() {
+          this.loadingState.classList.add("hidden");
+          this.errorState.classList.add("hidden");
+          this.profileContent.classList.remove("hidden");
+        }
+
+        async loadProfile() {
+          try {
+            this.showLoading();
+
+            // Check authentication
+            if (!AuthManager.isAuthenticated()) {
+              window.location.href = "/login.html";
+              return;
+            }
+
+            // Load profile data
+            const res = await fetch("/api/users/profile", {
+              headers: AuthManager.getAuthHeaders(),
+            });
+
+            const result = await res.json();
+
+            if (res.ok) {
+              this.displayProfile(result.data);
+              this.showProfile();
+            } else {
+              this.showError(result.message || "Profil bilgileri alınamadı.");
+            }
+          } catch (err) {
+            console.error("Profile loading error:", err);
+            this.showError("Bağlantı hatası: " + err.message);
+          }
+        }
+
+        displayProfile(profileData) {
+          // Update header username
+          document.getElementById("headerUsername").textContent =
+            profileData.username;
+
+          // Update profile info
+          document.getElementById("username").textContent =
+            profileData.username || "Belirtilmemiş";
+          document.getElementById("email").textContent =
+            profileData.email || "Belirtilmemiş";
+
+          // Format language display
+          const languageMap = { tr: "Türkçe", en: "English" };
+          document.getElementById("language").textContent =
+            languageMap[profileData.language] ||
+            profileData.language ||
+            "Belirtilmemiş";
+
+          // Update account status
+          document.getElementById("accountStatus").textContent =
+            profileData.isActive ? "Aktif" : "Pasif";
+
+          // Update member since year
+          if (profileData.created_at) {
+            const memberYear = new Date(profileData.created_at).getFullYear();
+            document.getElementById("memberSince").textContent = memberYear;
+          }
+
+          // Update stats (mock data for now)
+          this.loadUserStats();
+        }
+
+        async loadUserStats() {
+          try {
+            // Try to load user's favorites and watchlist counts
+            const res = await fetch("/api/users/my-lists", {
+              headers: AuthManager.getAuthHeaders(),
+            });
+
+            if (res.ok) {
+              const result = await res.json();
+              const favoriteCount =
+                (result.data.favorites?.movies?.length || 0) +
+                (result.data.favorites?.series?.length || 0);
+              const watchlistCount =
+                (result.data.watchlist?.movies?.length || 0) +
+                (result.data.watchlist?.series?.length || 0);
+
+              document.getElementById("favoriteCount").textContent =
+                favoriteCount;
+              document.getElementById("watchlistCount").textContent =
+                watchlistCount;
+            }
+          } catch (err) {
+            console.warn("Could not load user stats:", err);
+            // Keep default values if stats can't be loaded
+          }
+        }
+      }
+
+      // Initialize profile manager
+      const profileManager = new ProfileManager();
+
+      // Load profile when page loads
+      document.addEventListener("DOMContentLoaded", () => {
+        profileManager.loadProfile();
+      });
+
+      // Auth manager fallback if not loaded
+      if (typeof AuthManager === "undefined") {
+        window.AuthManager = {
+          isAuthenticated: () => !!localStorage.getItem("token"),
+          getAuthHeaders: () => ({
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          }),
+          logout: () => {
+            localStorage.removeItem("token");
+            window.location.href = "/login.html";
+          },
+        };
+      }
+    </script>
+  </body>
+</html>

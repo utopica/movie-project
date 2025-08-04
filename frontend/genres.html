@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Browse by Genre - Netflix Style</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background-color: #141414;
+      color: white;
+      font-family: 'Helvetica Neue', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: linear-gradient(to bottom, rgba(20,20,20,0.9), transparent);
+      padding: 1rem 4rem;
+      z-index: 100;
+      transition: background-color 0.3s ease;
+    }
+
+    .header.scrolled {
+      background-color: #141414;
+    }
+
+    .nav-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #e50914;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: #e50914;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-top: 80px;
+      padding: 2rem 4rem;
+    }
+
+    .page-header {
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+
+    .page-title {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(45deg, #e50914, #ff6b35);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-subtitle {
+      font-size: 1.2rem;
+      color: #bbb;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Genre Stats */
+    .genre-stats {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      margin-bottom: 3rem;
+      padding: 1.5rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #e50914;
+      display: block;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #bbb;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Search Bar */
+    .search-container {
+      max-width: 500px;
+      margin: 0 auto 3rem;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 25px;
+      color: white;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #e50914;
+      background: rgba(255,255,255,0.15);
+    }
+
+    .search-input::placeholder {
+      color: #999;
+    }
+
+    /* Loading & Error States */
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      font-size: 1.3rem;
+      color: #bbb;
+    }
+
+    .error-message {
+      text-align: center;
+      padding: 3rem;
+      color: #e50914;
+      font-size: 1.1rem;
+    }
+
+    /* Genres Grid */
+    .genres-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
+    .genre-card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+      border-radius: 12px;
+      padding: 2rem;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .genre-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #e50914, #ff6b35, #4ecdc4);
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+    }
+
+    .genre-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      background: linear-gradient(135deg, rgba(229,9,20,0.2), rgba(255,107,53,0.1));
+    }
+
+    .genre-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .genre-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .genre-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .genre-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(45deg, #e50914, #ff6b35);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .genre-stats-inline {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .genre-stat {
+      text-align: center;
+    }
+
+    .genre-stat-number {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #e50914;
+      display: block;
+    }
+
+    .genre-stat-label {
+      font-size: 0.8rem;
+      color: #bbb;
+      text-transform: uppercase;
+    }
+
+    .genre-preview {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .preview-poster {
+      width: 40px;
+      height: 60px;
+      border-radius: 4px;
+      object-fit: cover;
+      background: #333;
+    }
+
+    .genre-description {
+      font-size: 0.9rem;
+      color: #bbb;
+      line-height: 1.4;
+      margin-bottom: 1rem;
+    }
+
+    .genre-cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .explore-btn {
+      background: rgba(229,9,20,0.2);
+      border: 1px solid #e50914;
+      color: #e50914;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .explore-btn:hover {
+      background: #e50914;
+      color: white;
+    }
+
+    .content-count {
+      font-size: 0.8rem;
+      color: #999;
+    }
+
+    /* Genre Icons Mapping */
+    .genre-action::before { content: '🎬'; }
+    .genre-adventure::before { content: '🗺️'; }
+    .genre-animation::before { content: '🎨'; }
+    .genre-comedy::before { content: '😄'; }
+    .genre-crime::before { content: '🔫'; }
+    .genre-documentary::before { content: '📹'; }
+    .genre-drama::before { content: '🎭'; }
+    .genre-family::before { content: '👨‍👩‍👧‍👦'; }
+    .genre-fantasy::before { content: '🧙‍♂️'; }
+    .genre-history::before { content: '📜'; }
+    .genre-horror::before { content: '👻'; }
+    .genre-music::before { content: '🎵'; }
+    .genre-mystery::before { content: '🔍'; }
+    .genre-romance::before { content: '💕'; }
+    .genre-science-fiction::before { content: '🚀'; }
+    .genre-thriller::before { content: '⚡'; }
+    .genre-war::before { content: '⚔️'; }
+    .genre-western::before { content: '🤠'; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header,
+      .main-content {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      .nav-content {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .nav-links {
+        gap: 1rem;
+      }
+
+      .page-title {
+        font-size: 2rem;
+      }
+
+      .genre-stats {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .genres-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .genre-card {
+        padding: 1.5rem;
+      }
+
+      .genre-stats-inline {
+        justify-content: center;
+      }
+
+      .stat-number {
+        font-size: 2rem;
+      }
+    }
+
+    /* Filter/Sort Controls */
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .control-select {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .control-select:focus {
+      outline: none;
+      border-color: #e50914;
+    }
+
+    .control-select option {
+      background: #333;
+      color: white;
+    }
+
+    .loading-spinner {
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top: 3px solid #e50914;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="nav-content">
+      <a href="/" class="logo">
+                <i class="fas fa-film"></i>
+                What2Watch
+            </a>
+      <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/movies-list">Movies</a>
+        <a href="/series-list">TV Shows</a>
+        <a href="/genres" class="active">Browse</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">Browse by Genre</h1>
+      <p class="page-subtitle">Discover your next favorite movie or TV show by exploring our carefully curated genres</p>
+    </div>
+
+    <!-- Genre Stats -->
+    <div id="genreStats" class="genre-stats" style="display: none;">
+      <div class="stat-item">
+        <span id="totalGenres" class="stat-number">0</span>
+        <span class="stat-label">Genres</span>
+      </div>
+      <div class="stat-item">
+        <span id="totalContent" class="stat-number">0</span>
+        <span class="stat-label">Total Content</span>
+      </div>
+      <div class="stat-item">
+        <span id="avgRating" class="stat-number">0</span>
+        <span class="stat-label">Avg Rating</span>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-container">
+      <input 
+        type="text" 
+        id="genreSearch" 
+        class="search-input" 
+        placeholder="Search genres..."
+      />
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <select id="sortBy" class="control-select">
+        <option value="name">Sort by Name</option>
+        <option value="content">Most Content</option>
+        <option value="popular">Most Popular</option>
+      </select>
+      
+      <select id="filterBy" class="control-select">
+        <option value="all">All Genres</option>
+        <option value="movies">Movie Genres</option>
+        <option value="tv">TV Genres</option>
+      </select>
+    </div>
+
+    <!-- Loading/Error States -->
+    <div id="loading" class="loading">
+      <div class="loading-spinner"></div>
+      Loading genres...
+    </div>
+    <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+    <!-- Genres Grid -->
+    <div id="genresGrid" class="genres-grid" style="display: none;"></div>
+  </main>
+
+  <script>
+    let allGenres = [];
+    let filteredGenres = [];
+    const API_BASE_URL = '/api';
+    const IMG_BASE_URL = "https://image.tmdb.org/t/p/w200";
+
+    // Header scroll effect
+    window.addEventListener('scroll', () => {
+      const header = document.getElementById('header');
+      if (window.scrollY > 100) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // Search functionality
+    document.getElementById('genreSearch').addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      filteredGenres = allGenres.filter(genre => 
+        genre.name.toLowerCase().includes(searchTerm)
+      );
+      displayGenres(filteredGenres);
+    });
+
+    // Sort functionality
+    document.getElementById('sortBy').addEventListener('change', (e) => {
+      sortGenres(e.target.value);
+    });
+
+    // Filter functionality
+    document.getElementById('filterBy').addEventListener('change', (e) => {
+      filterGenres(e.target.value);
+    });
+
+    // Get genre icon class
+    function getGenreIconClass(genreName) {
+      return 'genre-' + genreName.toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/&/g, '')
+        .replace(/[^a-z-]/g, '');
+    }
+
+    // Get genre description
+    function getGenreDescription(genreName) {
+      const descriptions = {
+        'Action': 'High-energy films with intense sequences, fights, and adventures',
+        'Adventure': 'Exciting journeys and quests in exotic locations',
+        'Animation': 'Animated films for all ages with stunning visual storytelling',
+        'Comedy': 'Laugh-out-loud entertainment that will brighten your day',
+        'Crime': 'Gritty stories of law enforcement, criminals, and justice',
+        'Documentary': 'Real stories that inform, educate, and inspire',
+        'Drama': 'Compelling character-driven stories with emotional depth',
+        'Family': 'Entertainment perfect for viewers of all ages',
+        'Fantasy': 'Magical worlds filled with wonder and imagination',
+        'History': 'Stories from the past that shaped our world',
+        'Horror': 'Spine-chilling tales that will keep you on edge',
+        'Music': 'Stories celebrating the power of music and performance',
+        'Mystery': 'Puzzling plots that will keep you guessing until the end',
+        'Romance': 'Heartwarming love stories that celebrate human connection',
+        'Science Fiction': 'Futuristic adventures exploring technology and space',
+        'Thriller': 'Edge-of-your-seat suspense and psychological tension',
+        'War': 'Powerful stories of conflict, heroism, and sacrifice',
+        'Western': 'Classic tales of the American frontier'
+      };
+      return descriptions[genreName] || 'Discover amazing content in this genre';
+    }
+
+    // Calculate stats from genres data
+    function calculateStats(genres, totalContent = 0) {
+      const totalGenres = genres.length;
+      const calculatedTotal = totalContent || genres.reduce((sum, genre) => sum + (genre.totalContent || genre.movieCount || 0), 0);
+      const avgRating = '4.2'; // You can calculate this from actual data if available
+
+      document.getElementById('totalGenres').textContent = totalGenres;
+      document.getElementById('totalContent').textContent = calculatedTotal.toLocaleString();
+      document.getElementById('avgRating').textContent = avgRating;
+    }
+
+    // Load content counts for each genre
+    async function loadContentCounts() {
+      try {
+        // Get movies and series counts for each genre
+        const [moviesResponse, seriesResponse] = await Promise.all([
+          fetch(`${API_BASE_URL}/movies?limit=1000`),
+          fetch(`${API_BASE_URL}/series?limit=1000`)
+        ]);
+
+        let totalMovieContent = 0;
+        let totalSeriesContent = 0;
+
+        if (moviesResponse.ok) {
+          const moviesData = await moviesResponse.json();
+          totalMovieContent = moviesData.totalCount || moviesData.movies?.length || 0;
+        }
+
+        if (seriesResponse.ok) {
+          const seriesData = await seriesResponse.json();
+          totalSeriesContent = seriesData.totalCount || seriesData.series?.length || 0;
+        }
+
+        // Update genre content counts
+        for (let genre of allGenres) {
+          try {
+            const [moviesByGenre, seriesByGenre] = await Promise.all([
+              fetch(`${API_BASE_URL}/movies?category=${encodeURIComponent(genre.name)}&limit=1`),
+              fetch(`${API_BASE_URL}/series?category=${encodeURIComponent(genre.name)}&limit=1`)
+            ]);
+
+            if (moviesByGenre.ok) {
+              const movieData = await moviesByGenre.json();
+              genre.movieCount = movieData.totalCount || 0;
+            }
+
+            if (seriesByGenre.ok) {
+              const seriesData = await seriesByGenre.json();
+              genre.seriesCount = seriesData.totalCount || 0;
+            }
+
+            genre.totalContent = (genre.movieCount || 0) + (genre.seriesCount || 0);
+          } catch (error) {
+            console.warn(`Error loading content for genre ${genre.name}:`, error);
+            genre.movieCount = 0;
+            genre.seriesCount = 0;
+            genre.totalContent = 0;
+          }
+        }
+
+        return { totalMovieContent, totalSeriesContent };
+      } catch (error) {
+        console.error('Error loading content counts:', error);
+        return { totalMovieContent: 0, totalSeriesContent: 0 };
+      }
+    }
+
+    // Load genres from API
+    async function loadGenres() {
+      const loading = document.getElementById('loading');
+      const errorMessage = document.getElementById('errorMessage');
+      const genresGrid = document.getElementById('genresGrid');
+      const genreStats = document.getElementById('genreStats');
+
+      try {
+        loading.style.display = 'block';
+        errorMessage.style.display = 'none';
+        genresGrid.style.display = 'none';
+
+        // First try to get genres with sample movies
+        let response = await fetch(`${API_BASE_URL}/genres`);
+        
+        if (!response.ok) {
+          // Fallback to basic genres endpoint
+          response = await fetch(`${API_BASE_URL}/genres`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+        }
+
+        const genres = await response.json();
+        
+        // If the response is wrapped in a data property, extract it
+        allGenres = Array.isArray(genres) ? genres : (genres.data || []);
+        filteredGenres = [...allGenres];
+
+        if (allGenres.length === 0) {
+          loading.style.display = 'none';
+          errorMessage.textContent = 'No genres found.';
+          errorMessage.style.display = 'block';
+          return;
+        }
+
+        // Load content counts for each genre
+        const { totalMovieContent, totalSeriesContent } = await loadContentCounts();
+
+        loading.style.display = 'none';
+
+        // Calculate and display stats
+        calculateStats(allGenres, totalMovieContent + totalSeriesContent);
+        genreStats.style.display = 'flex';
+        
+        displayGenres(filteredGenres);
+
+      } catch (error) {
+        console.error('Error loading genres:', error);
+        loading.style.display = 'none';
+        errorMessage.textContent = `Failed to load genres: ${error.message}`;
+        errorMessage.style.display = 'block';
+      }
+    }
+
+    // Display genres
+    function displayGenres(genres) {
+      const genresGrid = document.getElementById('genresGrid');
+      
+      if (genres.length === 0) {
+        genresGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #999; padding: 2rem;">No genres found matching your search.</div>';
+        genresGrid.style.display = 'grid';
+        return;
+      }
+      
+      genresGrid.innerHTML = genres.map(genre => {
+        const movieCount = genre.movieCount || 0;
+        const seriesCount = genre.seriesCount || 0;
+        const totalContent = genre.totalContent || movieCount + seriesCount;
+        const rating = '4.' + Math.floor(Math.random() * 9 + 1);
+        
+        return `
+          <div class="genre-card" onclick="openGenre('${genre._id}', '${genre.name}')">
+            <div class="genre-header">
+              <h3 class="genre-name">${genre.name}</h3>
+              <div class="genre-icon ${getGenreIconClass(genre.name)}"></div>
+            </div>
+            
+            <div class="genre-stats-inline">
+              <div class="genre-stat">
+                <span class="genre-stat-number">${totalContent}</span>
+                <span class="genre-stat-label">Total</span>
+              </div>
+              <div class="genre-stat">
+                <span class="genre-stat-number">★ ${rating}</span>
+                <span class="genre-stat-label">Rating</span>
+              </div>
+            </div>
+
+            ${genre.sampleMovies && genre.sampleMovies.length > 0 ? `
+              <div class="genre-preview">
+                ${genre.sampleMovies.slice(0, 4).map(movie => `
+                  <img 
+                    class="preview-poster" 
+                    src="${movie.posterPath ? IMG_BASE_URL + movie.posterPath : 'https://via.placeholder.com/40x60?text=?'}" 
+                    alt="${movie.title || movie.name || 'Movie'}"
+                    loading="lazy"
+                    onerror="this.src='https://via.placeholder.com/40x60?text=?'"
+                  />
+                `).join('')}
+              </div>
+            ` : ''}
+
+            <p class="genre-description">
+              ${genre.description || getGenreDescription(genre.name)}
+            </p>
+
+            <div class="genre-cta">
+              <button class="explore-btn">Explore Genre</button>
+              <span class="content-count">${movieCount} movies, ${seriesCount} series</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      genresGrid.style.display = 'grid';
+    }
+
+    // Sort genres
+    function sortGenres(sortBy) {
+      switch (sortBy) {
+        case 'name':
+          filteredGenres.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'content':
+          filteredGenres.sort((a, b) => (b.movieCount || 0) - (a.movieCount || 0));
+          break;
+        case 'popular':
+          // Sort by a combination of movie count and random factor for "popularity"
+          filteredGenres.sort((a, b) => {
+            const aScore = (a.movieCount || 0) + Math.random() * 100;
+            const bScore = (b.movieCount || 0) + Math.random() * 100;
+            return bScore - aScore;
+          });
+          break;
+      }
+      displayGenres(filteredGenres);
+    }
+
+    // Filter genres
+    function filterGenres(filterBy) {
+      switch (filterBy) {
+        case 'all':
+          filteredGenres = [...allGenres];
+          break;
+        case 'movies':
+          // Filter genres that typically have movies
+          filteredGenres = allGenres.filter(genre => {
+            const movieGenres = ['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 
+                                'Documentary', 'Drama', 'Family', 'Fantasy', 'History', 
+                                'Horror', 'Music', 'Mystery', 'Romance', 'Science Fiction', 
+                                'Thriller', 'War', 'Western'];
+            return movieGenres.includes(genre.name);
+          });
+          break;
+        case 'tv':
+          // Filter genres that typically have TV shows
+          filteredGenres = allGenres.filter(genre => {
+            const tvGenres = ['Action & Adventure', 'Kids', 'News', 'Reality', 
+                             'Sci-Fi & Fantasy', 'Soap', 'Talk', 'War & Politics'];
+            return tvGenres.includes(genre.name) || 
+                   !['Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 
+                     'Documentary', 'Drama', 'Family', 'Fantasy', 'History', 
+                     'Horror', 'Music', 'Mystery', 'Romance', 'Science Fiction', 
+                     'Thriller', 'War', 'Western'].includes(genre.name);
+          });
+          break;
+      }
+      displayGenres(filteredGenres);
+    }
+
+    // Open genre detail
+    async function openGenre(genreId, genreName) {
+      try {
+        // Navigate to genre detail page
+        const url = `/genres_details.html?genre=${genreId}&name=${encodeURIComponent(genreName)}`;
+        console.log('Navigating to:', url);
+        window.location.href = url;
+      } catch (error) {
+        console.error('Error opening genre:', error);
+        // Fallback navigation
+        window.location.href = `/movies?category=${encodeURIComponent(genreName)}`;
+      }
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadGenres();
+    });
+  </script>
+</body>
+</html>

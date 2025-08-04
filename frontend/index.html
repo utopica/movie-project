@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>w2w</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<style>
+  
+
+      .nav-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #e50914;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .nav-links a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        position: relative;
+      }
+
+      .nav-links a:hover,
+      .nav-links a.active {
+        color: #e50914;
+        background: rgba(229, 9, 20, 0.1);
+      }
+</style>
+<body>
+  <header>
+    <div class="logo">
+      <a href="/" class="logo">
+                <i class="fas fa-film"></i>
+                What2Watch
+            </a>
+    </div>
+
+    <div class="nav-bar">
+      <a href="movie_list.html" class="active">Movies</a>
+      <a href="series_list.html">TV Shows</a>
+      <a href="genres.html">Genres</a>
+
+      
+
+    </div>
+
+
+   
+
+    <div class="user-controls2">
+      <a href="profile.html"><span class="icon"><i class="fa-solid fa-user"></i></span></a>
+    </div>  
+  </header>
+
+  <main>
+    <div id="trending-content">
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        Filmler yükleniyor...
+      </div>
+      
+      <section class="trending-slider" id="trendingSlider" style="display: none;">
+        <button class="slider-arrow prev" id="prevBtn">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="slider-arrow next" id="nextBtn">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+        <div class="slider-nav" id="sliderNav"></div>
+      </section>
+    </div>
+
+    <!-- Genres Section -->
+    <section class="content-section" id="genres-section">
+      <div class="section-header">
+        <h2>Our Genres</h2>
+        <div class="navigation-arrows">
+          <button class="nav-arrow prev" id="genrePrevBtn">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <div class="nav-dots" id="genreNavDots"></div>
+          <button class="nav-arrow next" id="genreNextBtn">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+      <div class="genre-grid" id="genreGrid">
+        <div class="loading-placeholder">Loading genres...</div>
+      </div>
+    </section>
+
+    <!-- Movies Section -->
+    <section class="content-section" id="movies-section">
+      <div class="section-header">
+        <h2>
+          <i class="fas fa-film"></i>
+          Movies
+        </h2>
+        <div class="section-tabs">
+          <button class="tab-btn active" data-filter="popular">
+            <i class="fas fa-thumbs-up"></i>
+            Popular
+          </button>
+          <button class="tab-btn" data-filter="latest">
+            <i class="fas fa-star"></i>
+            Latest
+          </button>
+          <button class="tab-btn" data-filter="added">
+            <i class="fas fa-plus"></i>
+            Recently Added
+          </button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-categories">
+          <button class="filter-btn active" data-category="all">Action</button>
+          <button class="filter-btn" data-category="adventure">Adventure</button>
+          <button class="filter-btn" data-category="animation">Animation</button>
+          <button class="filter-btn" data-category="biography">Documentary</button>
+          <button class="filter-btn" data-category="crime">Crime</button>
+          <button class="filter-btn" data-category="comedy">Comedy</button>
+        </div>
+        <div class="sort-options">
+          <span>Sort by:</span>
+          <select id="movieSortBy">
+            <option value="latest">Latest</option>
+            <option value="year">Year</option>
+            <option value="title">A-Z</option>
+            <option value="rating">Rating</option>
+          </select>
+        </div>
+      </div>
+      <div class="content-grid" id="movieGrid">
+        <div class="loading-placeholder">Loading movies...</div>
+      </div>
+      <div class="pagination" id="moviePagination">
+        <button class="pagination-btn" id="moviePrevBtn" disabled>
+          <i class="fas fa-chevron-left"></i>
+          Previous
+        </button>
+        <span class="page-info" id="moviePageInfo">Page 1</span>
+        <button class="pagination-btn" id="movieNextBtn">
+          Next
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- Series Section -->
+    <section class="content-section" id="series-section">
+      <div class="section-header">
+        <h2>
+          <i class="fas fa-tv"></i>
+          Series
+        </h2>
+        <div class="section-tabs">
+          <button class="tab-btn active" data-filter="popular">
+            <i class="fas fa-thumbs-up"></i>
+            Popular
+          </button>
+          <button class="tab-btn" data-filter="latest">
+            <i class="fas fa-star"></i>
+            Latest
+          </button>
+          <button class="tab-btn" data-filter="added">
+            <i class="fas fa-plus"></i>
+            Recently Added
+          </button>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <div class="filter-categories">
+          <button class="filter-btn active" data-category="all">Drama</button>
+          <button class="filter-btn" data-category="action">Action</button>
+          <button class="filter-btn" data-category="comedy">Comedy</button>
+          <button class="filter-btn" data-category="crime">Crime</button>
+          <button class="filter-btn" data-category="thriller">Thriller</button>
+          <button class="filter-btn" data-category="sci-fi">Sci-Fi</button>
+        </div>
+        <div class="sort-options">
+          <span>Sort by:</span>
+          <select id="seriesSortBy">
+            <option value="latest">Latest</option>
+            <option value="year">Year</option>
+            <option value="title">A-Z</option>
+            <option value="rating">Rating</option>
+          </select>
+        </div>
+      </div>
+      <div class="content-grid" id="seriesGrid">
+        <div class="loading-placeholder">Loading series...</div>
+      </div>
+      <div class="pagination" id="seriesPagination">
+        <button class="pagination-btn" id="seriesPrevBtn" disabled>
+          <i class="fas fa-chevron-left"></i>
+          Previous
+        </button>
+        <span class="page-info" id="seriesPageInfo">Page 1</span>
+        <button class="pagination-btn" id="seriesNextBtn">
+          Next
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 W2W</p>
+  </footer>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/authUtils.js"></script>
+  <script src="/js/userLists.js"></script>
+  <script src="/js/movieSlider.js"></script>
+  <script src="/js/genres.js"></script>
+  <script src="/js/movies.js"></script>
+  <script src="/js/series.js"></script>
+</body>
+</html>
